@@ -1,60 +1,92 @@
+;***********************************************************************
+;
+;プログラム名：サーバ一覧からの選択後自動ログイン実施
+;機能名　　　：テラタームログインマクロ
+;ファイル名　：login20160901.tll
+;文字コード　：-
+;機能概要　　：サーバにテラタームを用いてログインするときに使用する.
+;　　　　　　　一度ログインに成功した場合二度目以降は一覧から選ぶ
+;　　　　　　　だけでログインが完了する.
+;　　　　　　　ログイン先の文字コードも選択可能
+;呼び出し形式：テラタームマクロから呼び出す
+;戻り値　　　：キーボードからの入力を受け付ければ正常終了
+;　　　　　　　入力を受け付けない場合バグがある.手動でテラタームごと終了すること.そしてマクロを直すか手動でログインし直す.
+;
+;ディレクトリ構造：
+;　　　　　　　テラタームマクロ（本ファイル）.ttl
+;　　　　　　　　　|
+;　　　　　　　　　|---dat/
+;　　　　　　　　　|　　　datlogin.txt　←ログイン用サーバ情報
+;　　　　　　　　　|
+;　　　　　　　　　|---data/
+;　　　　　　　　　|　　　password.dat　←ログイン後に生成される
+;　　　　　　　　　|
+;　　　　　　　　　|---log/
+;　　　　　　　　　　　　 [年月日時分秒]_teraterm.log　←ログイン後に生成される
+;
+;作成者　　　：20160901　chesscommands
+;改版履歴　　：20160901　chesscommands　新規作成　　　　　　　　　R1.0
+;　　　　　　：20160903　chesscommands　インデント追加　　　　　　R1.1
+;
+;***********************************************************************
+
 getdir mcrodir_onDir
 ; ■ログインサーバを選択する
 logintxtname = ''
 makepath aaa mcrodir_onDir '\dat\datlogin.txt'
 filesearch aaa
 if 0 = result then
-messagebox mcrodir_onDir 'debug'
-messagebox 'file not' 'exit1'
-end
+	messagebox mcrodir_onDir 'debug'
+	messagebox 'file not' 'exit'
+	end
 endif
 mcrodir_datlogin = mcrodir_onDir
 strconcat mcrodir_datlogin '\dat'
 setdir mcrodir_datlogin
 fileopen fhandle 'datlogin.txt' 0
 if 0 > fhandle then
-messagebox 'file not' 'exit2'
-end
+	messagebox 'file not' 'exit'
+	end
 endif
 show -1
 txtTitleline = ''
 txtline = ''
 :loop
-filereadln fhandle line
-if 1 = result goto fclose
-txtline = line
-code2str starStr 33178
-strmatch txtline starStr
-if 0 < result then
-strconcat txtTitleline txtline
-strconcat txtTitleline #13#10
-endif
+	filereadln fhandle line
+	if 1 = result goto fclose
+	txtline = line
+	code2str starStr 33178
+	strmatch txtline starStr
+	if 0 < result then
+		strconcat txtTitleline txtline
+		strconcat txtTitleline #13#10
+	endif
 goto loop
 :fclose
 fileclose fhandle
 inputbox txtTitleline 'serverSelect'
 str2int serverNumber inputstr
 if 1 <> result then
-exit
+	exit
 endif
 mcrodir_datlogin = mcrodir_onDir
 strconcat mcrodir_datlogin '\dat'
 setdir mcrodir_datlogin
 fileopen fhandle 'datlogin.txt' 0
 if 0 > fhandle then
-messagebox 'file not' 'exit'
-end
+	messagebox 'file not' 'exit'
+	end
 endif
 txtTitleline = ''
 txtline = ''
 :loopSecond
-filereadln fhandle line
-if 1 = result goto fclose
-txtline = line
-str2int serverTitleLine txtline
-if serverNumber = serverTitleLine then
-goto loopexit
-endif
+	filereadln fhandle line
+	if 1 = result goto fclose
+	txtline = line
+	str2int serverTitleLine txtline
+	if serverNumber = serverTitleLine then
+		goto loopexit
+	endif
 goto loopSecond
 :loopexit
 filereadln fhandle rline
@@ -66,25 +98,25 @@ fileclose fhandle
 mozjiicode = 'sjis'
 str2int streline eline
 if 1 = result then
-if 1 = streline then
-strlen eline
-if 1 < result then
-strcopy eline 2 result eeline
-strcompare eeline 'EUC-JP'
-if 0 = result then
-mozjiicode = 'EUC'
-endif
-strcompare eeline 'Shift_JIS'
-if 0 = result then
-mozjiicode = 'SJIS'
-endif
-strcompare eeline 'UTF-8'
-if 0 = result then
-mozjiicode = 'UTF8'
-endif
-endif
-endif
-mozjiicode = 'SJIS'
+	if 1 = streline then
+		strlen eline
+		if 1 < result then
+			strcopy eline 2 result eeline
+			strcompare eeline 'EUC-JP'
+			if 0 = result then
+				mozjiicode = 'EUC'
+			endif
+			strcompare eeline 'Shift_JIS'
+			if 0 = result then
+				mozjiicode = 'SJIS'
+			endif
+			strcompare eeline 'UTF-8'
+			if 0 = result then
+				mozjiicode = 'UTF8'
+			endif
+		endif
+	endif
+	mozjiicode = 'SJIS'
 endif
 tellnet = ':23 /nossh /T=1 /NOLOG '
 strconcat tellnet ' /KR='
@@ -97,8 +129,8 @@ connect connectionserver
 ; ■現在のリンク及び接続の状態を確認する
 testlink
 if 2 <> result then
-messagebox 'link err' 'exit'
-end
+	messagebox 'link err' 'exit'
+	end
 endif
 showtt -1
 ; ■その他
@@ -106,14 +138,14 @@ enablekeyb 0
 timeout = 5
 getver version '4.74'
 if 0 > result then
-messagebox 'ver old' 'exit'
-goto err_END
+	messagebox 'ver old' 'exit'
+	goto err_END
 endif
 goto gotoJump
 :err_END
 testlink
 if 0 <> result then
-closett
+	closett
 endif
 end
 :gotoJump
@@ -160,12 +192,12 @@ recvln
 waitregex '.*[^%]+.*[%]{1}.*' '.*[^$]+.*[$]{1}.*' '.*[^#]+.*[#]{1}.*' '[^.]*＼$[^.]*' '[^.]*#[^.]*'
 prompt = matchstr
 if 5 < result then
-messagebox 'eer' 'exit'
-goto err_END
+	messagebox 'err' 'exit'
+	goto err_END
 endif
 if 1 > result then
-messagebox 'err' 'exit'
-goto err_END
+	messagebox 'err' 'exit'
+	goto err_END
 endif
 sendln
 strtrim prompt ''
@@ -173,8 +205,8 @@ flushrecv
 sendln
 wait prompt
 if 1 <> result then
-messagebox 'err' 'exit'
-goto err_END
+	messagebox 'err' 'exit'
+	goto err_END
 endif
 ;sendln ' set -o ignoreeof'
 ;sendln ' tabs -4'
@@ -189,39 +221,39 @@ wait prompt
 clearscreen 1
 str2int strcline cline
 if 1 = result then
-if 1 = strcline then
-strlen cline
-if 1 < result then
-strcopy cline 2 result ccline
-sendln 'cd 'ccline
-sendln
-endif
-endif
+	if 1 = strcline then
+		strlen cline
+		if 1 < result then
+			strcopy cline 2 result ccline
+			sendln 'cd 'ccline
+			sendln
+		endif
+	endif
 endif
 str2int streline eline
 if 1 = result then
-if 1 = streline then
-strlen eline
-if 1 < result then
-strcopy eline 2 result eeline
-strcompare eeline 'EUC-JP'
-if 0 = result then
-callmenu 54011
-callmenu 54111
-endif
-strcompare eeline 'Shift_JIS'
-if 0 = result then
-callmenu 54010
-callmenu 54110
-endif
-strcompare eeline 'UTF-8'
-if 0 = result then
-callmenu 54013
-callmenu 54113
-endif
-endif
-endif
-mozjiicode = 'SJIS'
+	if 1 = streline then
+		strlen eline
+		if 1 < result then
+			strcopy eline 2 result eeline
+			strcompare eeline 'EUC-JP'
+			if 0 = result then
+				callmenu 54011
+				callmenu 54111
+			endif
+			strcompare eeline 'Shift_JIS'
+			if 0 = result then
+				callmenu 54010
+				callmenu 54110
+			endif
+			strcompare eeline 'UTF-8'
+			if 0 = result then
+				callmenu 54013
+				callmenu 54113
+			endif
+		endif
+	endif
+	mozjiicode = 'SJIS'
 endif
 wait prompt
 enablekeyb 1
